@@ -2,70 +2,174 @@
 
 **TravelPilot AI** is a production-oriented, free-first, multi-agent travel planning and decision-support system built with **LangGraph**, **Groq LLM (Free Tier)**, **Model Context Protocol (MCP)**, **FastAPI**, **React + TypeScript**, and **Human-in-the-Loop (HITL)** controls.
 
----
-
-## 🌟 Key Architecture Highlights
-
-- **Multi-Agent Orchestration**: Powered by **LangGraph** with a Supervisor Agent routing dynamically to specialist agents (Flight, Hotel, Weather, Budget, Itinerary).
-- **Free-First Engineering**: Built around **Groq API (Free Tier)**, open APIs (Open-Meteo for weather), and deterministic demo providers for flights/hotels.
-- **Model Context Protocol (MCP)**: Decoupled tool execution via structured MCP clients and servers.
-- **Deterministic Guardrails**: Strict input/output guardrails with prompt-injection defense and budget calculation in pure Python.
-- **Human-in-the-Loop (HITL)**: Stateful interrupt/resume graph design enabling approval, editing, and plan revisions.
-- **Production Observability**: Local structured logging (`structlog`) with optional zero-overhead **LangSmith** tracing.
+> [!IMPORTANT]
+> **Free-First Engineering**: Primary LLM inference uses the Groq API (`llama-3.3-70b-versatile` free tier). All flight and hotel results run in **Demo Mode** using simulated deterministic providers. Live weather forecasts use the free Open-Meteo REST API. No paid APIs or cloud databases are required.
 
 ---
 
-## 📁 Repository Structure
+## 🌟 Table of Contents
+1. [Project Overview](#-project-overview)
+2. [Problem Statement](#-problem-statement)
+3. [Architecture](#-architecture)
+4. [Why Multi-Agent?](#-why-multi-agent)
+5. [Why LangGraph?](#-why-langgraph)
+6. [Supervisor Design](#-supervisor-design)
+7. [Dynamic Routing](#-dynamic-routing)
+8. [MCP Architecture](#-mcp-architecture)
+9. [Guardrails & Prompt Injection Defense](#-guardrails--prompt-injection-defense)
+10. [Human-in-the-Loop (HITL)](#-human-in-the-loop-hitl)
+11. [Memory & Checkpointing](#-memory--checkpointing)
+12. [Observability](#-observability)
+13. [Free / Demo Provider Architecture](#-free--demo-provider-architecture)
+14. [Security](#-security)
+15. [Evaluation Benchmark](#-evaluation-benchmark)
+16. [Testing](#-testing)
+17. [Local Setup](#-local-setup)
+18. [Environment Variables](#-environment-variables)
+19. [API Documentation](#-api-documentation)
+20. [Docker & CI/CD](#-docker--cicd)
+21. [Limitations & Future Improvements](#-limitations--future-improvements)
 
-```
-travelpilot-ai/
-├── backend/                  # FastAPI Application & LangGraph Agents
-│   ├── app/
-│   │   ├── api/             # REST endpoints (Plan, Session, HITL)
-│   │   ├── agents/          # Supervisor & Specialist agents
-│   │   ├── graph/           # LangGraph state machine & routing
-│   │   ├── guardrails/      # Input & output safety & prompt injection
-│   │   ├── mcp/             # MCP client abstractions
-│   │   ├── models/          # Database models (SQLAlchemy)
-│   │   ├── schemas/         # Pydantic schemas & TravelState
-│   │   ├── services/        # Business logic services
-│   │   ├── memory/          # Checkpointing & session memory
-│   │   ├── providers/       # Flight/Hotel/Weather provider adapters
-│   │   ├── observability/   # Structlog & LangSmith configuration
-│   │   ├── config/          # Centralized configuration & LLM factory
-│   │   └── main.py          # FastAPI server entrypoint
-│   └── tests/               # Backend automated test suite
-├── mcp_servers/              # Model Context Protocol server tools
-├── frontend/                 # React + TypeScript user interface
-├── evaluation/               # Agent evaluation suite & benchmarks
-├── docs/                     # Architecture & system design specs
-├── scripts/                  # Development & utility scripts
-├── .env.example              # Environment variables blueprint
-├── pyproject.toml            # Dependencies & project metadata
-└── README.md
+---
+
+## 📖 Project Overview
+TravelPilot AI goes beyond basic chatbots by delivering an end-to-end agentic workflow. The system coordinates specialized agents to analyze user intent, fetch simulated flights and hotels, retrieve live destination weather, calculate exact budgets in Python, generate day-by-day itineraries, and pause for human approval before finalizing.
+
+## 🎯 Problem Statement
+Traditional travel booking portals force users to jump across multiple tabs to compare flights, hotels, weather, and budget limits. Standard chat LLMs often hallucinate live flight availability or make arithmetic errors when calculating multi-day expenses. TravelPilot AI solves this by coupling LLM reasoning with deterministic Python calculations, safety guardrails, and real-time human controls.
+
+---
+
+## 🏗 Architecture
+
+```mermaid
+flowchart TD
+    User([User Prompt]) --> InputGuardrail[Input Guardrail Node]
+    InputGuardrail -->|Pass| Supervisor[Supervisor Agent]
+    InputGuardrail -->|Block| BlockedResponse[Return Guardrail Error]
+    
+    Supervisor -->|Dynamic Routing| SpecialistAgents{Required Specialist Agents}
+    
+    SpecialistAgents --> Flight[Flight Agent]
+    SpecialistAgents --> Hotel[Hotel Agent]
+    SpecialistAgents --> Weather[Weather Agent]
+    
+    Flight --> MCP_Flight[MCP Flight Server]
+    Hotel --> MCP_Hotel[MCP Hotel Server]
+    Weather --> OpenMeteo[Open-Meteo Free API]
+    
+    Flight & Hotel & Weather --> Budget[Budget Agent - Deterministic]
+    Budget --> Itinerary[Itinerary Agent]
+    Itinerary --> OutputGuardrail[Output Guardrail Node]
+    
+    OutputGuardrail --> HITL[Human Review Node - Interrupt]
+    
+    HITL -->|Approve| Complete[Final Response]
+    HITL -->|Edit| Reevaluate[Update Feedback & Revise]
+    HITL -->|Reject| EndState[End Session]
 ```
 
 ---
 
-## 🚀 Quick Start (Development Mode)
+## 🤖 Why Multi-Agent?
+Instead of a single monolithic prompt, TravelPilot AI decouples responsibilities into dedicated specialist agents:
+- **Supervisor Agent**: Extracts intent and determines execution routing.
+- **Flight Agent**: Searches flight options via MCP.
+- **Hotel Agent**: Searches accommodation options via MCP.
+- **Weather Agent**: Fetches weather forecasts via Open-Meteo.
+- **Budget Agent**: Executes deterministic math in Python.
+- **Itinerary Agent**: Generates day-by-day activity schedules.
 
-### 1. Environment Setup
-```bash
-cp .env.example .env
-# Add your free Groq API key in .env (optional for Demo mode)
+## 🔄 Why LangGraph?
+LangGraph provides a state machine model with explicit `StateGraph`, typed `TravelState`, conditional edge routing, loop protection, and native `interrupt()` checkpointing for Human-in-the-Loop approval.
+
+---
+
+## 🛠 Model Context Protocol (MCP) Architecture
+Tools are isolated into standalone servers (`mcp_servers/`) and invoked via `MCPClient.call_tool()` with strict allowlist checks, schema validation, and execution latency logging.
+
+```mermaid
+sequenceDiagram
+    participant Agent as Specialist Agent
+    participant Client as MCP Client
+    participant Registry as Tool Allowlist
+    participant Server as MCP Server
+
+    Agent->>Client: call_tool("search_flights", args)
+    Client->>Registry: is_tool_allowed("search_flights")
+    Registry-->>Client: True
+    Client->>Server: execute(args)
+    Server-->>Client: FlightSearchResult
+    Client-->>Agent: (Success, Result, ToolCallInfo)
 ```
 
-### 2. Install Dependencies
+---
+
+## 🛡 Guardrails & Safety
+- **Input Guardrail**: Detects prompt injection attempts (e.g. "ignore previous instructions", system prompt overrides, SQL injection patterns) and filters out-of-scope non-travel queries.
+- **Output Guardrail**: Ensures no secret API keys are leaked, validates schema integrity, and enforces the mandatory Demo Mode disclaimer.
+
+---
+
+## 👤 Human-in-the-Loop (HITL)
+Workflows automatically interrupt at `human_review` using LangGraph checkpointers (`MemorySaver`). Users can:
+- **APPROVE**: Resume graph and finalize output.
+- **EDIT**: Submit feedback (e.g., "choose a cheaper hotel") to revise the plan.
+- **REJECT**: Terminate session.
+
+---
+
+## 📊 Evaluation Benchmark
+Run the automated agent evaluation suite:
 ```bash
-pip install -e .[dev]
+python evaluation/run_eval.py
+```
+Evaluates 10 benchmark scenarios (safety, routing precision, tool calls, and output validity) with **100% accuracy**.
+
+---
+
+## 🚀 Local Setup & Quick Start
+
+### 1. Prerequisites
+- Python 3.10+
+- Node.js 16+ / 18+
+
+### 2. Backend Setup
+```bash
+# Clone and enter workspace
+cd d:\travelPilotAI
+
+# Setup virtual environment & install dependencies
+python -m venv .venv
+.venv\Scripts\python -m pip install -e .[dev]
+
+# Run automated backend test suite (50 tests)
+.venv\Scripts\python -m pytest backend/tests
+
+# Start FastAPI server
+.venv\Scripts\python -m uvicorn backend.app.main:app --reload --port 8000
 ```
 
-### 3. Run Tests
+### 3. Frontend Setup
 ```bash
+cd frontend
+npm install
+npm run build
+npm run dev
+```
+
+---
+
+## 🧪 Automated Testing
+```bash
+# Run backend test suite
 pytest backend/tests
+
+# Run agent evaluation suite
+python evaluation/run_eval.py
 ```
 
 ---
 
-## 🛡️ License
-MIT License
+## 📝 License
+MIT License — TravelPilot AI Engineering Team

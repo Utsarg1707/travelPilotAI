@@ -1,6 +1,7 @@
 """Phase 1 Scaffolding Health Check Test."""
 
 from fastapi.testclient import TestClient
+
 from backend.app.main import app
 
 client = TestClient(app)
