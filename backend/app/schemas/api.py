@@ -4,8 +4,13 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from backend.app.schemas.budget import BudgetAnalysis
+from backend.app.schemas.flights import FlightSearchResult
+from backend.app.schemas.hotels import HotelSearchResult
+from backend.app.schemas.itinerary import Itinerary
 from backend.app.schemas.supervisor import SupervisorDecision
 from backend.app.schemas.travel_state import ToolCallInfo
+from backend.app.schemas.weather import WeatherResult
 
 
 class PlanRequest(BaseModel):
@@ -26,6 +31,11 @@ class PlanResponse(BaseModel):
     selected_agents: list[str] = Field(default_factory=list, description="Specialist agents invoked")
     final_response: str | None = Field(None, description="Synthesized user-facing response text")
     tool_calls: list[ToolCallInfo] = Field(default_factory=list, description="Executed tool metadata")
+    flight_results: FlightSearchResult | None = Field(None, description="Flight search options")
+    hotel_results: HotelSearchResult | None = Field(None, description="Hotel search options")
+    weather_forecast: WeatherResult | None = Field(None, description="Destination weather forecast")
+    budget_analysis: BudgetAnalysis | None = Field(None, description="Financial budget analysis")
+    itinerary: Itinerary | None = Field(None, description="Day-by-day itinerary")
     is_demo: bool = Field(True, description="Demo mode indicator")
 
 

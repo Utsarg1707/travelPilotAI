@@ -84,6 +84,11 @@ async def create_travel_plan(request: PlanRequest):
             selected_agents=current_values.get("selected_agents", []),
             final_response=current_values.get("final_response"),
             tool_calls=current_values.get("tool_calls", []),
+            flight_results=current_values.get("flight_results"),
+            hotel_results=current_values.get("hotel_results"),
+            weather_forecast=current_values.get("weather_results"),
+            budget_analysis=current_values.get("budget_analysis"),
+            itinerary=current_values.get("itinerary"),
             is_demo=True,
         )
     except Exception as err:
@@ -172,6 +177,11 @@ async def _handle_hitl_resume(session_id: str, action: str, feedback: str) -> Pl
             selected_agents=res_state.get("selected_agents", []),
             final_response=res_state.get("final_response"),
             tool_calls=res_state.get("tool_calls", []),
+            flight_results=res_state.get("flight_results"),
+            hotel_results=res_state.get("hotel_results"),
+            weather_forecast=res_state.get("weather_results"),
+            budget_analysis=res_state.get("budget_analysis"),
+            itinerary=res_state.get("itinerary"),
             is_demo=True,
         )
     except Exception as err:

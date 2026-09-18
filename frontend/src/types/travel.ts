@@ -135,6 +135,11 @@ export interface PlanResponse {
   selected_agents: string[];
   final_response?: string;
   tool_calls: ToolCallInfo[];
+  flight_results?: FlightSearchResult;
+  hotel_results?: HotelSearchResult;
+  weather_forecast?: WeatherResult;
+  budget_analysis?: BudgetAnalysis;
+  itinerary?: Itinerary;
   is_demo: boolean;
 }
 
