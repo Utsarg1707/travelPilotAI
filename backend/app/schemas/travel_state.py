@@ -41,6 +41,7 @@ class TravelState(TypedDict, total=False):
     normalized_request: NormalizedTravelRequest | None
     origin: str | None
     destination: str | None
+    destinations: list[str] | None
     travel_dates: TravelDates | None
     travelers: int | None
     preferences: list[str]

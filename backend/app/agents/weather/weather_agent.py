@@ -18,8 +18,33 @@ class WeatherAgent:
     @classmethod
     def run_node(cls, state: TravelState) -> TravelState:
         """Execute Weather Agent as a LangGraph node handler."""
-        destination = state.get("destination") or "Dubai"
-        duration = state.get("supervisor_decision").duration_days if state.get("supervisor_decision") else 5
+        decision = state.get("supervisor_decision")
+        destinations = state.get("destinations") or (decision.destinations if decision and decision.destinations else [])
+        destination = state.get("destination") or (decision.destination if decision else "Dubai")
+        duration = decision.duration_days if decision else 5
 
-        result = cls.get_forecast(destination=destination, days=duration)
+        if destinations and len(destinations) > 1:
+            all_forecasts = []
+            summaries = []
+            recs = []
+            provider = FreeWeatherProvider()
+            days_per_city = max(3, duration // len(destinations))
+            for city in destinations:
+                res = provider.get_weather_forecast(destination=city, days=days_per_city)
+                summaries.append(f"[{city}] {res.weather_summary}")
+                all_forecasts.extend(res.forecast)
+                if res.recommendations:
+                    recs.extend(res.recommendations)
+
+            unique_recs = list(dict.fromkeys(recs))
+            result = WeatherResult(
+                destination=destination,
+                current_temp_c=all_forecasts[0].temp_max_c if all_forecasts else 28.5,
+                weather_summary=" | ".join(summaries),
+                forecast=all_forecasts,
+                recommendations=unique_recs,
+            )
+        else:
+            result = cls.get_forecast(destination=destination, days=duration)
+
         return {"weather_results": result}

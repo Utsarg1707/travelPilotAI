@@ -39,6 +39,7 @@ def supervisor_node(state: TravelState) -> dict[str, Any]:
     return {
         "supervisor_decision": decision,
         "destination": decision.destination,
+        "destinations": decision.destinations,
         "origin": decision.origin,
         "travelers": decision.travelers,
         "budget": decision.constraints.get("budget", 150000.0),

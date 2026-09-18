@@ -93,6 +93,7 @@ export interface ItineraryActivity {
 export interface ItineraryDay {
   day_number: number;
   date?: string;
+  destination_city?: string;
   theme: string;
   activities: ItineraryActivity[];
   daily_cost_inr: number;
@@ -100,6 +101,7 @@ export interface ItineraryDay {
 
 export interface Itinerary {
   destination: string;
+  destinations?: string[];
   total_days: number;
   days: ItineraryDay[];
   summary: string;
@@ -108,6 +110,7 @@ export interface Itinerary {
 
 export interface SupervisorDecision {
   destination: string;
+  destinations?: string[];
   origin: string;
   travelers: number;
   duration_days: number;
@@ -132,6 +135,7 @@ export interface PlanResponse {
   status: 'completed' | 'waiting_for_approval' | 'blocked' | 'error';
   approval_status: 'pending' | 'approved' | 'edited' | 'rejected';
   supervisor_decision?: SupervisorDecision;
+  destinations?: string[];
   selected_agents: string[];
   final_response?: string;
   tool_calls: ToolCallInfo[];

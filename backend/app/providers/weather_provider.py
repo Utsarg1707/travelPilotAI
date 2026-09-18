@@ -20,6 +20,7 @@ class FreeWeatherProvider(WeatherProvider):
 
     CITY_COORDINATES = {
         "dubai": (25.2048, 55.2708),
+        "abu dhabi": (24.4539, 54.3773),
         "paris": (48.8566, 2.3522),
         "tokyo": (35.6762, 139.6503),
         "singapore": (1.3521, 103.8198),
@@ -28,6 +29,10 @@ class FreeWeatherProvider(WeatherProvider):
         "rome": (41.9028, 12.4964),
         "goa": (15.2993, 74.1240),
         "bali": (-8.4095, 115.1889),
+        "delhi": (28.6139, 77.2090),
+        "mumbai": (19.0760, 72.8777),
+        "venice": (45.4408, 12.3155),
+        "barcelona": (41.3851, 2.1734),
     }
 
     def get_weather_forecast(self, destination: str, days: int = 5) -> WeatherResult:

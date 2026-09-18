@@ -62,3 +62,20 @@ def test_itinerary_agent_generation():
     # Verify no scheduling overlaps (activities ordered properly)
     for day in res.days:
         assert len(day.activities) >= 1
+
+
+def test_itinerary_agent_multi_destination_generation():
+    res = ItineraryAgent.generate(
+        destination="Dubai & Abu Dhabi",
+        destinations=["Dubai", "Abu Dhabi"],
+        duration_days=7,
+    )
+    assert "Dubai" in res.destination
+    assert "Abu Dhabi" in res.destination
+    assert res.total_days == 7
+    assert len(res.days) == 7
+    # Verify days are allocated across both cities
+    cities_in_days = [day.destination_city for day in res.days]
+    assert "Dubai" in cities_in_days
+    assert "Abu Dhabi" in cities_in_days
+

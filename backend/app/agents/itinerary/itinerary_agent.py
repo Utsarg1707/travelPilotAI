@@ -93,17 +93,43 @@ class ItineraryAgent:
     def generate(
         cls,
         destination: str = "Goa",
+        destinations: list[str] | None = None,
         duration_days: int = 5,
         preferences: list[str] | None = None,
     ) -> Itinerary:
-        """Generate detailed day-by-day itinerary without scheduling conflicts."""
+        """Generate detailed day-by-day itinerary supporting single or multi-destination trips."""
+        target_dests = destinations if destinations and len(destinations) > 0 else [destination]
         days: list[ItineraryDay] = []
+        num_dests = len(target_dests)
+
+        # Allocate days per destination
+        days_per_dest = duration_days // num_dests
+        extra_days = duration_days % num_dests
+
+        current_dest_idx = 0
+        days_in_current_dest = 0
+        target_days_for_current = days_per_dest + (1 if current_dest_idx < extra_days else 0)
 
         for i in range(1, duration_days + 1):
-            tmpl = cls.get_template(destination, i)
+            city = target_dests[current_dest_idx]
+            day_in_city = days_in_current_dest + 1
+            tmpl = cls.get_template(city, day_in_city)
             activities: list[ItineraryActivity] = []
 
-            m_title, m_desc, m_loc, m_cost = tmpl["morning"]
+            # Check if this day is a transit day between cities
+            is_transit_day = (num_dests > 1 and day_in_city == 1 and current_dest_idx > 0)
+
+            if is_transit_day:
+                prev_city = target_dests[current_dest_idx - 1]
+                m_title, m_desc, m_loc, m_cost = (
+                    f"Inter-city Transit: {prev_city} → {city}",
+                    f"Check out from {prev_city} hotel, private transfer/high-speed transport to {city}.",
+                    f"Transit Route ({prev_city} - {city})",
+                    2500.0,
+                )
+            else:
+                m_title, m_desc, m_loc, m_cost = tmpl["morning"]
+
             a_title, a_desc, a_loc, a_cost = tmpl["afternoon"]
             e_title, e_desc, e_loc, e_cost = tmpl["evening"]
 
@@ -140,22 +166,31 @@ class ItineraryAgent:
                 ItineraryDay(
                     day_number=i,
                     date=f"Day {i}",
-                    theme=tmpl["theme"],
+                    destination_city=city,
+                    theme=f"[{city}] {tmpl['theme']}",
                     activities=activities,
                     daily_cost_inr=daily_cost,
                 )
             )
 
-        summary = f"Comprehensive {duration_days}-day itinerary for {destination} balancing sightseeing, relaxation, and local culinary highlights."
+            days_in_current_dest += 1
+            if days_in_current_dest >= target_days_for_current and current_dest_idx < num_dests - 1:
+                current_dest_idx += 1
+                days_in_current_dest = 0
+                target_days_for_current = days_per_dest + (1 if current_dest_idx < extra_days else 0)
+
+        dest_str = " & ".join(target_dests) if num_dests > 1 else target_dests[0]
+        summary = f"Comprehensive {duration_days}-day multi-city itinerary for {dest_str} balancing sightseeing, inter-city travel, and local culture."
         highlights = [
-            f"Seamless arrival transfer and hotel check-in at {destination}",
-            "Curated morning cultural tours and scenic afternoon excursions",
-            "Evening dining experiences featuring local specialty cuisine",
+            f"Seamless travel itinerary covering {dest_str}",
+            "Balanced allocation of days and curated local cultural tours in each city",
+            "Included inter-city transit and smooth hotel check-ins",
             "Zero scheduling overlaps between flights, hotel check-ins, and tours",
         ]
 
         return Itinerary(
-            destination=destination,
+            destination=dest_str,
+            destinations=target_dests,
             total_days=duration_days,
             days=days,
             summary=summary,
@@ -165,14 +200,23 @@ class ItineraryAgent:
     @classmethod
     def run_node(cls, state: TravelState) -> TravelState:
         """Execute Itinerary Agent as a LangGraph node handler."""
-        destination = state.get("destination") or "Goa"
         decision = state.get("supervisor_decision")
+        destinations = state.get("destinations") or (decision.destinations if decision and decision.destinations else [])
+        destination = state.get("destination") or (decision.destination if decision else "Goa")
+        if not destinations:
+            destinations = [destination]
+
         duration = decision.duration_days if decision else 5
         travelers = decision.travelers if decision else 2
         origin = state.get("origin") or "Bangalore"
         preferences = state.get("preferences") or []
 
-        itinerary = cls.generate(destination=destination, duration_days=duration, preferences=preferences)
+        itinerary = cls.generate(
+            destination=destination,
+            destinations=destinations,
+            duration_days=duration,
+            preferences=preferences,
+        )
 
         flight_res = state.get("flight_results")
         hotel_res = state.get("hotel_results")
@@ -181,8 +225,8 @@ class ItineraryAgent:
 
         # Synthesize complete, detailed markdown document
         lines: list[str] = [
-            f"# ✈️ Complete Travel Plan & Itinerary: {destination}",
-            f"**Origin**: {origin} | **Destination**: {destination} | **Travelers**: {travelers} | **Duration**: {duration} Days\n",
+            f"# ✈️ Complete Travel Plan & Itinerary: {itinerary.destination}",
+            f"**Origin**: {origin} | **Destinations**: {', '.join(destinations)} | **Travelers**: {travelers} | **Duration**: {duration} Days\n",
             "---",
             "## ✈️ Flight Options (MCP Live Search)",
         ]
@@ -256,7 +300,7 @@ class ItineraryAgent:
         ])
 
         for day in itinerary.days:
-            lines.append(f"### 🗓️ Day {day.day_number}: {day.theme}")
+            lines.append(f"### 🗓️ Day {day.day_number} [{day.destination_city or destination}]: {day.theme}")
             lines.append(f"*Estimated Daily Activity Expense: ₹{day.daily_cost_inr:,.2f}*\n")
             lines.append("| Time Slot | Activity | Description | Location | Est. Cost |")
             lines.append("|---|---|---|---|---|")

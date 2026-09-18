@@ -11,6 +11,11 @@ from backend.app.schemas.travel_state import TravelState
 SUPERVISOR_SYSTEM_PROMPT = """You are the Lead Supervisor Agent for TravelPilot AI.
 Your sole job is to analyze user travel requests, extract key parameters, and select which specialist agents must run.
 
+Multi-Destination Extraction:
+- Extract all target destination cities requested by the user into the 'destinations' list (e.g., ["Dubai", "Abu Dhabi"], or ["Paris", "Rome"]).
+- If only one city is requested, 'destinations' should contain that single city (e.g., ["Dubai"]).
+- Set 'destination' to a formatted string combining all target cities (e.g., "Dubai & Abu Dhabi" or "Paris & Rome").
+
 Available Specialist Agents:
 - "flight": Search and compare flight options between origin and destination.
 - "hotel": Search accommodation options in destination.
@@ -48,7 +53,12 @@ class SupervisorAgent:
                 )
                 chain = prompt | structured_llm
                 decision: SupervisorDecision = chain.invoke({"user_query": user_query})
-                return decision
+                if decision:
+                    if not decision.destinations and decision.destination:
+                        decision.destinations = [decision.destination]
+                    elif len(decision.destinations) > 1 and " & " not in decision.destination:
+                        decision.destination = " & ".join(decision.destinations)
+                    return decision
             except Exception:
                 # Log error and fallback gracefully to deterministic router
                 pass
@@ -61,18 +71,29 @@ class SupervisorAgent:
         """Deterministic rule-based router for demo mode without LLM calls."""
         query_lower = query.lower()
 
-        # Destination extraction heuristic
-        destination = "Dubai"
-        for city in ["dubai", "paris", "tokyo", "singapore", "goa", "london", "rome", "bali", "bangalore"]:
-            if city in query_lower:
-                destination = city.capitalize()
-                break
-
         # Origin extraction heuristic
         origin = "Bangalore"
         origin_match = re.search(r"from\s+([a-zA-Z]+)", query_lower)
-        if origin_match and origin_match.group(1).lower() != destination.lower():
+        if origin_match:
             origin = origin_match.group(1).capitalize()
+
+        # Multi-destination extraction heuristic
+        known_cities = [
+            "dubai", "abu dhabi", "paris", "tokyo", "singapore", "goa",
+            "london", "rome", "bali", "bangalore", "delhi", "mumbai", "venice", "barcelona"
+        ]
+        found_destinations: list[str] = []
+        for city in known_cities:
+            if city in query_lower and city != origin.lower():
+                formatted_city = " ".join(w.capitalize() for w in city.split())
+                if formatted_city not in found_destinations:
+                    found_destinations.append(formatted_city)
+
+        if not found_destinations:
+            found_destinations = ["Dubai"]
+
+        destinations = found_destinations
+        destination = " & ".join(destinations) if len(destinations) > 1 else destinations[0]
 
         # Duration extraction heuristic
         duration = 5
@@ -114,10 +135,11 @@ class SupervisorAgent:
             reason = "Hotel query detected: Routing exclusively to Hotel Agent."
         else:
             required_agents = ["flight", "hotel", "weather", "budget", "itinerary"]
-            reason = f"Full travel plan requested for {destination}. Routing to specialist agents."
+            reason = f"Full multi-destination travel plan requested for {destination}. Routing to specialist agents."
 
         return SupervisorDecision(
             destination=destination,
+            destinations=destinations,
             origin=origin,
             travelers=travelers,
             duration_days=duration,

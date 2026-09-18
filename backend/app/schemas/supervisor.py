@@ -8,7 +8,8 @@ from pydantic import BaseModel, Field
 class SupervisorDecision(BaseModel):
     """Structured decision output from Supervisor Agent."""
 
-    destination: str = Field(..., description="Destination city/region")
+    destination: str = Field(..., description="Primary or aggregated destination city/region")
+    destinations: list[str] = Field(default_factory=list, description="List of destination cities/regions for multi-city trips")
     origin: str = Field("Bangalore", description="Origin city/region")
     travelers: int = Field(1, ge=1, description="Number of travelers")
     duration_days: int = Field(1, ge=1, description="Trip duration in days")
@@ -18,3 +19,4 @@ class SupervisorDecision(BaseModel):
     )
     routing_reason: str = Field(..., description="Concise routing metadata explaining selected agents")
     constraints: dict[str, Any] = Field(default_factory=dict, description="Extracted travel constraints (e.g. budget limit)")
+
