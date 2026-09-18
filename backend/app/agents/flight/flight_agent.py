@@ -1,6 +1,5 @@
 """Flight Specialist Agent."""
 
-
 from backend.app.mcp import MCPClient
 from backend.app.schemas.flights import FlightOption, FlightSearchResult
 from backend.app.schemas.travel_state import TravelState
@@ -18,9 +17,6 @@ class FlightAgent:
         preferences: list[str] | None = None,
     ) -> FlightSearchResult:
         """Search and compare flight options (Demo Mode provider integration)."""
-        prefs = preferences or []
-        pref_str = " ".join(prefs).lower()
-
         # Generate realistic simulated options tailored to destination
         options: list[FlightOption] = [
             FlightOption(
@@ -85,7 +81,7 @@ class FlightAgent:
         destination = state.get("destination") or "Dubai"
         travelers = state.get("travelers") or 1
 
-        success, data, tool_info = MCPClient.call_tool(
+        _success, _data, tool_info = MCPClient.call_tool(
             agent_name="FlightAgent",
             tool_name="search_flights",
             arguments={"origin": origin, "destination": destination, "travelers": travelers},
@@ -98,4 +94,3 @@ class FlightAgent:
             "flight_results": result,
             "tool_calls": tool_calls,
         }
-

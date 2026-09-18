@@ -44,4 +44,3 @@ def test_supervisor_multi_destination_routing():
     assert decision.origin == "Bangalore"
     assert decision.duration_days == 7
     assert len(decision.required_agents) == 5
-

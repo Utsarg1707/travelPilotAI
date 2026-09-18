@@ -95,30 +95,42 @@ def synthesize_partial_response(state: TravelState) -> str:
     if "flight" in selected and state.get("flight_results"):
         f_res = state.get("flight_results")
         lines.append(f"# ✈️ Flight Search Results: {origin} to {destination}")
-        lines.append(f"**Origin**: {origin} | **Destination**: {destination} | **Travelers**: {travelers}\n")
+        lines.append(
+            f"**Origin**: {origin} | **Destination**: {destination} | **Travelers**: {travelers}\n"
+        )
         if f_res and f_res.options:
-            lines.append("| Airline | Flight No | Departure | Arrival | Duration | Price / Person | Total Flight Cost |")
+            lines.append(
+                "| Airline | Flight No | Departure | Arrival | Duration | Price / Person | Total Flight Cost |"
+            )
             lines.append("|---|---|---|---|---|---|---|")
             for f in f_res.options:
                 lines.append(
                     f"| **{f.airline}** | `{f.flight_number}` | {f.departure_time} | {f.arrival_time} | {f.duration} | ₹{f.price_inr:,.2f} | **₹{f.total_price_inr:,.2f}** |"
                 )
-        lines.append("\n*Demo Mode: Flight results are simulated and are not live booking availability.*")
+        lines.append(
+            "\n*Demo Mode: Flight results are simulated and are not live booking availability.*"
+        )
         return "\n".join(lines)
 
     if "hotel" in selected and state.get("hotel_results"):
         h_res = state.get("hotel_results")
         lines.append(f"# 🏨 Accommodation Options in {destination}")
-        lines.append(f"**Destination**: {destination} | **Nights**: {h_res.nights if h_res else 1}\n")
+        lines.append(
+            f"**Destination**: {destination} | **Nights**: {h_res.nights if h_res else 1}\n"
+        )
         if h_res and h_res.options:
-            lines.append("| Hotel Name | Location | Rating | Price / Night | Total Stay | Key Amenities |")
+            lines.append(
+                "| Hotel Name | Location | Rating | Price / Night | Total Stay | Key Amenities |"
+            )
             lines.append("|---|---|---|---|---|---|")
             for h in h_res.options:
                 amenities_str = ", ".join(h.amenities[:3]) if h.amenities else "WiFi, AC, Breakfast"
                 lines.append(
                     f"| **{h.hotel_name}** | {h.location} | ⭐ {h.rating}/5 | ₹{h.price_per_night_inr:,.2f} | **₹{h.total_price_inr:,.2f}** | {amenities_str} |"
                 )
-        lines.append("\n*Demo Mode: Hotel results are simulated and are not live booking availability.*")
+        lines.append(
+            "\n*Demo Mode: Hotel results are simulated and are not live booking availability.*"
+        )
         return "\n".join(lines)
 
     if "weather" in selected and state.get("weather_results"):
@@ -143,18 +155,30 @@ def synthesize_partial_response(state: TravelState) -> str:
         b_res = state.get("budget_analysis")
         lines.append(f"# 💰 Budget Analysis for {destination}")
         if b_res:
-            lines.append(f"**Limit**: ₹{b_res.budget_limit:,.2f} | **Estimated Total**: ₹{b_res.estimated_total:,.2f} | **Status**: `{b_res.status_label}`\n")
+            lines.append(
+                f"**Limit**: ₹{b_res.budget_limit:,.2f} | **Estimated Total**: ₹{b_res.estimated_total:,.2f} | **Status**: `{b_res.status_label}`\n"
+            )
             cb = b_res.cost_breakdown
             limit = b_res.budget_limit or 1.0
             lines.append("| Expense Category | Estimated Cost (INR) | % of Budget |")
             lines.append("|---|---|---|")
-            lines.append(f"| ✈️ Flights | ₹{cb.flights:,.2f} | {(cb.flights / limit)*100:.1f}% |")
-            lines.append(f"| 🏨 Accommodation | ₹{cb.accommodation:,.2f} | {(cb.accommodation / limit)*100:.1f}% |")
-            lines.append(f"| 🍽️ Food & Dining | ₹{cb.food:,.2f} | {(cb.food / limit)*100:.1f}% |")
-            lines.append(f"| 🚕 Local Transport | ₹{cb.transport:,.2f} | {(cb.transport / limit)*100:.1f}% |")
-            lines.append(f"| 🎟️ Tours & Activities | ₹{cb.activities:,.2f} | {(cb.activities / limit)*100:.1f}% |")
-            lines.append(f"| 🛍️ Miscellaneous Buffer | ₹{cb.miscellaneous:,.2f} | {(cb.miscellaneous / limit)*100:.1f}% |")
-            lines.append(f"| **TOTAL ESTIMATED** | **₹{b_res.estimated_total:,.2f}** | **{(b_res.estimated_total / limit)*100:.1f}%** |")
+            lines.append(f"| ✈️ Flights | ₹{cb.flights:,.2f} | {(cb.flights / limit) * 100:.1f}% |")
+            lines.append(
+                f"| 🏨 Accommodation | ₹{cb.accommodation:,.2f} | {(cb.accommodation / limit) * 100:.1f}% |"
+            )
+            lines.append(f"| 🍽️ Food & Dining | ₹{cb.food:,.2f} | {(cb.food / limit) * 100:.1f}% |")
+            lines.append(
+                f"| 🚕 Local Transport | ₹{cb.transport:,.2f} | {(cb.transport / limit) * 100:.1f}% |"
+            )
+            lines.append(
+                f"| 🎟️ Tours & Activities | ₹{cb.activities:,.2f} | {(cb.activities / limit) * 100:.1f}% |"
+            )
+            lines.append(
+                f"| 🛍️ Miscellaneous Buffer | ₹{cb.miscellaneous:,.2f} | {(cb.miscellaneous / limit) * 100:.1f}% |"
+            )
+            lines.append(
+                f"| **TOTAL ESTIMATED** | **₹{b_res.estimated_total:,.2f}** | **{(b_res.estimated_total / limit) * 100:.1f}%** |"
+            )
         return "\n".join(lines)
 
     return "Travel query processed successfully."
@@ -177,7 +201,6 @@ def output_guardrail_node(state: TravelState) -> dict[str, Any]:
         "is_completed": True,
         "graph_iteration_count": state.get("graph_iteration_count", 0) + 1,
     }
-
 
 
 def human_review_node(state: TravelState) -> dict[str, Any]:
@@ -205,7 +228,9 @@ def human_review_node(state: TravelState) -> dict[str, Any]:
                 "is_completed": True,
             }
         elif action == "edit":
-            edited_response = f"{state.get('final_response', '')}\n\n### User Revisions Requested:\n{feedback}"
+            edited_response = (
+                f"{state.get('final_response', '')}\n\n### User Revisions Requested:\n{feedback}"
+            )
             return {
                 "approval_status": "edited",
                 "human_feedback": feedback,

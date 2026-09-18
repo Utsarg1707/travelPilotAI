@@ -1,6 +1,5 @@
 """LangGraph Checkpointing Strategy."""
 
-
 from langgraph.checkpoint.memory import MemorySaver
 
 

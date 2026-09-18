@@ -24,11 +24,40 @@ PROMPT_INJECTION_PATTERNS: list[re.Pattern] = [
 
 # Keywords indicating travel relevance
 TRAVEL_KEYWORDS: list[str] = [
-    "trip", "travel", "flight", "hotel", "visit", "vacation", "holiday",
-    "itinerary", "stay", "resort", "fly", "weather", "budget", "tour",
-    "destination", "attraction", "beach", "city", "explore", "booking",
-    "places", "days", "lake", "mountain", "dubai", "bangalore", "paris",
-    "tokyo", "singapore", "goa", "london", "rome", "bali", "thailand",
+    "trip",
+    "travel",
+    "flight",
+    "hotel",
+    "visit",
+    "vacation",
+    "holiday",
+    "itinerary",
+    "stay",
+    "resort",
+    "fly",
+    "weather",
+    "budget",
+    "tour",
+    "destination",
+    "attraction",
+    "beach",
+    "city",
+    "explore",
+    "booking",
+    "places",
+    "days",
+    "lake",
+    "mountain",
+    "dubai",
+    "bangalore",
+    "paris",
+    "tokyo",
+    "singapore",
+    "goa",
+    "london",
+    "rome",
+    "bali",
+    "thailand",
 ]
 
 
@@ -119,7 +148,12 @@ class InputGuardrail:
             return True, "Travel keyword matched"
 
         # Heuristic check for city-to-city or days pattern (e.g., "5 days in Rome", "from A to B")
-        if re.search(r"\b\d+\s*days?\b", query_lower) or re.search(r"\bfrom\s+\w+\s+to\s+\w+\b", query_lower):
+        if re.search(r"\b\d+\s*days?\b", query_lower) or re.search(
+            r"\bfrom\s+\w+\s+to\s+\w+\b", query_lower
+        ):
             return True, "Travel pattern matched"
 
-        return False, "Request does not appear to be travel-related. Please ask a travel or trip-planning question."
+        return (
+            False,
+            "Request does not appear to be travel-related. Please ask a travel or trip-planning question.",
+        )

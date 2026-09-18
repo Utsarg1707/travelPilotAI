@@ -5,7 +5,9 @@ from backend.app.schemas.itinerary import Itinerary, ItineraryDay
 
 
 def test_input_guardrail_safe_travel_query():
-    res = InputGuardrail.evaluate("Plan a 5-day trip to Dubai from Bangalore for 2 people with a budget of ₹1,50,000.")
+    res = InputGuardrail.evaluate(
+        "Plan a 5-day trip to Dubai from Bangalore for 2 people with a budget of ₹1,50,000."
+    )
     assert res.allowed is True
     assert res.detected_injection is False
     assert res.risk_level == "low"

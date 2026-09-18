@@ -78,4 +78,3 @@ def test_itinerary_agent_multi_destination_generation():
     cities_in_days = [day.destination_city for day in res.days]
     assert "Dubai" in cities_in_days
     assert "Abu Dhabi" in cities_in_days
-

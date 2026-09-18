@@ -16,8 +16,15 @@ from backend.app.schemas.weather import WeatherResult
 class PlanRequest(BaseModel):
     """Request payload for initiating a travel plan workflow."""
 
-    user_query: str = Field(..., json_schema_extra={"example": "Plan a 5-day trip to Dubai from Bangalore for 2 people with a budget of ₹1,50,000."})
-    session_id: str | None = Field(None, description="Optional existing session ID for context continuation")
+    user_query: str = Field(
+        ...,
+        json_schema_extra={
+            "example": "Plan a 5-day trip to Dubai from Bangalore for 2 people with a budget of ₹1,50,000."
+        },
+    )
+    session_id: str | None = Field(
+        None, description="Optional existing session ID for context continuation"
+    )
 
 
 class PlanResponse(BaseModel):
@@ -25,12 +32,22 @@ class PlanResponse(BaseModel):
 
     session_id: str = Field(..., description="Unique session identifier")
     request_id: str = Field(..., description="Unique request tracking identifier")
-    status: str = Field(..., description="Execution status: 'completed', 'waiting_for_approval', 'blocked', 'error'")
-    approval_status: str = Field("pending", description="Approval state: 'pending', 'approved', 'edited', 'rejected'")
-    supervisor_decision: SupervisorDecision | None = Field(None, description="Supervisor routing metadata")
-    selected_agents: list[str] = Field(default_factory=list, description="Specialist agents invoked")
+    status: str = Field(
+        ..., description="Execution status: 'completed', 'waiting_for_approval', 'blocked', 'error'"
+    )
+    approval_status: str = Field(
+        "pending", description="Approval state: 'pending', 'approved', 'edited', 'rejected'"
+    )
+    supervisor_decision: SupervisorDecision | None = Field(
+        None, description="Supervisor routing metadata"
+    )
+    selected_agents: list[str] = Field(
+        default_factory=list, description="Specialist agents invoked"
+    )
     final_response: str | None = Field(None, description="Synthesized user-facing response text")
-    tool_calls: list[ToolCallInfo] = Field(default_factory=list, description="Executed tool metadata")
+    tool_calls: list[ToolCallInfo] = Field(
+        default_factory=list, description="Executed tool metadata"
+    )
     flight_results: FlightSearchResult | None = Field(None, description="Flight search options")
     hotel_results: HotelSearchResult | None = Field(None, description="Hotel search options")
     weather_forecast: WeatherResult | None = Field(None, description="Destination weather forecast")

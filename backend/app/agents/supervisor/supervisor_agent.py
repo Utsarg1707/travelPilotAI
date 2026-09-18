@@ -79,8 +79,20 @@ class SupervisorAgent:
 
         # Multi-destination extraction heuristic
         known_cities = [
-            "dubai", "abu dhabi", "paris", "tokyo", "singapore", "goa",
-            "london", "rome", "bali", "bangalore", "delhi", "mumbai", "venice", "barcelona"
+            "dubai",
+            "abu dhabi",
+            "paris",
+            "tokyo",
+            "singapore",
+            "goa",
+            "london",
+            "rome",
+            "bali",
+            "bangalore",
+            "delhi",
+            "mumbai",
+            "venice",
+            "barcelona",
         ]
         found_destinations: list[str] = []
         for city in known_cities:
@@ -120,9 +132,15 @@ class SupervisorAgent:
 
         # Agent selection heuristic
         required_agents: list[str] = []
-        is_weather_only = "weather" in query_lower and not any(k in query_lower for k in ["plan", "trip", "flight", "hotel", "itinerary"])
-        is_flight_only = "flight" in query_lower and not any(k in query_lower for k in ["plan", "trip", "hotel", "itinerary", "weather"])
-        is_hotel_only = "hotel" in query_lower and not any(k in query_lower for k in ["plan", "trip", "flight", "itinerary", "weather"])
+        is_weather_only = "weather" in query_lower and not any(
+            k in query_lower for k in ["plan", "trip", "flight", "hotel", "itinerary"]
+        )
+        is_flight_only = "flight" in query_lower and not any(
+            k in query_lower for k in ["plan", "trip", "hotel", "itinerary", "weather"]
+        )
+        is_hotel_only = "hotel" in query_lower and not any(
+            k in query_lower for k in ["plan", "trip", "flight", "itinerary", "weather"]
+        )
 
         if is_weather_only:
             required_agents = ["weather"]

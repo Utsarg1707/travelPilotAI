@@ -87,7 +87,7 @@ class FreeWeatherProvider(WeatherProvider):
         # Simulated fallback if offline or unknown coordinates
         forecast_days = [
             WeatherForecastDay(
-                date=f"2026-10-0{i+1}",
+                date=f"2026-10-0{i + 1}",
                 temp_max_c=30.0 + (i % 2),
                 temp_min_c=23.0 + (i % 2),
                 precipitation_prob=10,

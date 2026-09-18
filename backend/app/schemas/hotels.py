@@ -1,6 +1,5 @@
 """Hotel Search Schemas."""
 
-
 from pydantic import BaseModel, Field
 
 

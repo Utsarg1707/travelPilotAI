@@ -1,6 +1,5 @@
 """Input and Output Guardrail Schemas."""
 
-
 from pydantic import BaseModel, Field
 
 
@@ -18,11 +17,15 @@ class InputGuardrailResult(BaseModel):
 class OutputGuardrailResult(BaseModel):
     """Evaluation result from Output Guardrail Node."""
 
-    allowed: bool = Field(..., description="Whether final synthesized response passes safety & consistency checks")
+    allowed: bool = Field(
+        ..., description="Whether final synthesized response passes safety & consistency checks"
+    )
     risk_level: str = Field("low", description="Risk assessment: 'low', 'medium', 'high'")
     reason: str = Field("", description="Reason for validation state")
     sanitized_response: str = Field(..., description="Cleaned output response text")
-    checked_items: list[str] = Field(default_factory=list, description="Validated items (budget, schema, safety)")
+    checked_items: list[str] = Field(
+        default_factory=list, description="Validated items (budget, schema, safety)"
+    )
 
 
 class GuardrailResults(BaseModel):

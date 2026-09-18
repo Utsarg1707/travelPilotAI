@@ -1,6 +1,5 @@
 """Budget Analysis Schemas."""
 
-
 from pydantic import BaseModel, Field
 
 
@@ -20,8 +19,14 @@ class BudgetAnalysis(BaseModel):
 
     estimated_total: float = Field(..., ge=0.0, description="Total estimated travel cost in INR")
     budget_limit: float = Field(..., ge=0.0, description="User budget limit in INR")
-    remaining_budget: float = Field(..., description="Remaining budget balance (positive or negative)")
+    remaining_budget: float = Field(
+        ..., description="Remaining budget balance (positive or negative)"
+    )
     within_budget: bool = Field(..., description="Flag indicating if total estimate <= limit")
     cost_breakdown: CostBreakdown = Field(..., description="Categorized expense details")
-    recommendations: list[str] = Field(default_factory=list, description="Budget optimization suggestions")
-    status_label: str = Field(..., description="Human readable budget status (e.g. 'Within Budget', 'Over Budget')")
+    recommendations: list[str] = Field(
+        default_factory=list, description="Budget optimization suggestions"
+    )
+    status_label: str = Field(
+        ..., description="Human readable budget status (e.g. 'Within Budget', 'Over Budget')"
+    )

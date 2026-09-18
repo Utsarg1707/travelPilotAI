@@ -1,6 +1,5 @@
 """Output Guardrail Node for Response Validation and Quality Control."""
 
-
 from backend.app.schemas.budget import BudgetAnalysis
 from backend.app.schemas.guardrails import OutputGuardrailResult
 from backend.app.schemas.itinerary import Itinerary

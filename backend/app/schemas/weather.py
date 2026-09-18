@@ -1,6 +1,5 @@
 """Weather Forecast Schemas."""
 
-
 from pydantic import BaseModel, Field
 
 
@@ -21,5 +20,9 @@ class WeatherResult(BaseModel):
     destination: str = Field(..., description="Destination location")
     current_temp_c: float = Field(..., description="Current average temperature in Celsius")
     weather_summary: str = Field(..., description="Text summary of weather forecast")
-    forecast: list[WeatherForecastDay] = Field(default_factory=list, description="Day-by-day forecast")
-    recommendations: list[str] = Field(default_factory=list, description="Weather-based travel recommendations")
+    forecast: list[WeatherForecastDay] = Field(
+        default_factory=list, description="Day-by-day forecast"
+    )
+    recommendations: list[str] = Field(
+        default_factory=list, description="Weather-based travel recommendations"
+    )

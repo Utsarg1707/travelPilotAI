@@ -25,7 +25,9 @@ class ToolCallInfo(BaseModel):
 
     agent_name: str = Field(..., description="Name of calling agent")
     tool_name: str = Field(..., description="Name of executed MCP/local tool")
-    arguments: dict[str, Any] = Field(default_factory=dict, description="Tool invocation parameters")
+    arguments: dict[str, Any] = Field(
+        default_factory=dict, description="Tool invocation parameters"
+    )
     result_summary: str = Field(..., description="Summary of tool output")
     execution_time_ms: float = Field(0.0, ge=0.0, description="Latency in milliseconds")
     is_demo: bool = Field(True, description="Demo provider flag")

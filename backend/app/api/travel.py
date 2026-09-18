@@ -26,7 +26,9 @@ def serialize_state_for_db(state: dict[str, Any]) -> dict[str, Any]:
         if hasattr(val, "model_dump"):
             serialized[key] = val.model_dump()
         elif isinstance(val, list):
-            serialized[key] = [item.model_dump() if hasattr(item, "model_dump") else item for item in val]
+            serialized[key] = [
+                item.model_dump() if hasattr(item, "model_dump") else item for item in val
+            ]
         else:
             serialized[key] = val
     return serialized
@@ -57,8 +59,13 @@ async def create_travel_plan(request: PlanRequest):
         state_snap = graph.get_state(config)
         current_values = state_snap.values or {}
 
-        status_str = "waiting_for_approval" if "human_review" in (state_snap.next or []) else "completed"
-        if current_values.get("input_guardrail") and not current_values.get("input_guardrail").allowed:
+        status_str = (
+            "waiting_for_approval" if "human_review" in (state_snap.next or []) else "completed"
+        )
+        if (
+            current_values.get("input_guardrail")
+            and not current_values.get("input_guardrail").allowed
+        ):
             status_str = "blocked"
 
         db_state = serialize_state_for_db(dict(current_values))
@@ -125,19 +132,25 @@ async def get_session_details(session_id: str):
 @router.post("/{session_id}/approve", response_model=PlanResponse)
 async def approve_plan(session_id: str, request: HITLActionRequest | None = None):
     """Resume interrupted LangGraph execution with APPROVE decision."""
-    return await _handle_hitl_resume(session_id=session_id, action="approve", feedback=request.feedback if request else "")
+    return await _handle_hitl_resume(
+        session_id=session_id, action="approve", feedback=request.feedback if request else ""
+    )
 
 
 @router.post("/{session_id}/edit", response_model=PlanResponse)
 async def edit_plan(session_id: str, request: HITLActionRequest):
     """Resume interrupted LangGraph execution with EDIT decision and user feedback."""
-    return await _handle_hitl_resume(session_id=session_id, action="edit", feedback=request.feedback or "")
+    return await _handle_hitl_resume(
+        session_id=session_id, action="edit", feedback=request.feedback or ""
+    )
 
 
 @router.post("/{session_id}/reject", response_model=PlanResponse)
 async def reject_plan(session_id: str, request: HITLActionRequest | None = None):
     """Resume interrupted LangGraph execution with REJECT decision."""
-    return await _handle_hitl_resume(session_id=session_id, action="reject", feedback=request.feedback if request else "")
+    return await _handle_hitl_resume(
+        session_id=session_id, action="reject", feedback=request.feedback if request else ""
+    )
 
 
 async def _handle_hitl_resume(session_id: str, action: str, feedback: str) -> PlanResponse:

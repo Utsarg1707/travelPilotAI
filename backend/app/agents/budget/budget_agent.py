@@ -1,6 +1,5 @@
 """Budget Specialist Agent using Deterministic Python Arithmetic."""
 
-
 from backend.app.schemas.budget import BudgetAnalysis, CostBreakdown
 from backend.app.schemas.flights import FlightSearchResult
 from backend.app.schemas.hotels import HotelSearchResult
@@ -42,7 +41,9 @@ class BudgetAgent:
         activities_cost = 1500.0 * duration_days * travelers
         misc_cost = 1000.0 * duration_days
 
-        total_estimated = flight_cost + hotel_cost + food_cost + transport_cost + activities_cost + misc_cost
+        total_estimated = (
+            flight_cost + hotel_cost + food_cost + transport_cost + activities_cost + misc_cost
+        )
         remaining = budget_limit - total_estimated
         within_budget = total_estimated <= budget_limit
 
@@ -59,11 +60,17 @@ class BudgetAgent:
         if within_budget:
             status_label = "Within Budget"
             recommendations.append(f"Excellent! Your plan is ₹{abs(remaining):,.2f} under budget.")
-            recommendations.append("Consider allocating excess budget for fine dining or desert safari upgrades.")
+            recommendations.append(
+                "Consider allocating excess budget for fine dining or desert safari upgrades."
+            )
         else:
             status_label = "Over Budget"
-            recommendations.append(f"Warning: Estimated expenses exceed budget limit by ₹{abs(remaining):,.2f}.")
-            recommendations.append("Consider opting for budget airlines or choosing 3-star downtown accommodations.")
+            recommendations.append(
+                f"Warning: Estimated expenses exceed budget limit by ₹{abs(remaining):,.2f}."
+            )
+            recommendations.append(
+                "Consider opting for budget airlines or choosing 3-star downtown accommodations."
+            )
 
         return BudgetAnalysis(
             estimated_total=round(total_estimated, 2),

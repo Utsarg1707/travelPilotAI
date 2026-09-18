@@ -59,5 +59,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler returning clean structured error responses."""
     return JSONResponse(
         status_code=500,
-        content={"status": "error", "message": "An internal server error occurred.", "detail": str(exc)},
+        content={
+            "status": "error",
+            "message": "An internal server error occurred.",
+            "detail": str(exc),
+        },
     )

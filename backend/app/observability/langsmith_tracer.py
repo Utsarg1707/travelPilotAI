@@ -12,7 +12,9 @@ def setup_langsmith_tracing():
     If LANGSMITH_API_KEY is absent, tracing remains disabled with zero overhead.
     """
     key = settings.LANGSMITH_API_KEY or os.getenv("LANGSMITH_API_KEY", "")
-    tracing_enabled = settings.LANGSMITH_TRACING or os.getenv("LANGSMITH_TRACING", "false").lower() == "true"
+    tracing_enabled = (
+        settings.LANGSMITH_TRACING or os.getenv("LANGSMITH_TRACING", "false").lower() == "true"
+    )
 
     if key and tracing_enabled:
         os.environ["LANGCHAIN_TRACING_V2"] = "true"

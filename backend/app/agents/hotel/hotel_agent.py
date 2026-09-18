@@ -1,6 +1,5 @@
 """Hotel Specialist Agent."""
 
-
 from backend.app.mcp import MCPClient
 from backend.app.schemas.hotels import HotelOption, HotelSearchResult
 from backend.app.schemas.travel_state import TravelState
@@ -67,13 +66,15 @@ class HotelAgent:
     def run_node(cls, state: TravelState) -> TravelState:
         """Execute Hotel Agent as a LangGraph node handler using MCP tool integration."""
         decision = state.get("supervisor_decision")
-        destinations = state.get("destinations") or (decision.destinations if decision and decision.destinations else [])
+        destinations = state.get("destinations") or (
+            decision.destinations if decision and decision.destinations else []
+        )
         destination = state.get("destination") or (decision.destination if decision else "Dubai")
         duration = decision.duration_days if decision else 5
         nights = max(1, duration - 1)
         travelers = state.get("travelers") or 1
 
-        success, data, tool_info = MCPClient.call_tool(
+        _success, _data, tool_info = MCPClient.call_tool(
             agent_name="HotelAgent",
             tool_name="search_hotels",
             arguments={"destination": destination, "nights": nights, "travelers": travelers},
@@ -105,4 +106,3 @@ class HotelAgent:
             "hotel_results": result,
             "tool_calls": tool_calls,
         }
-

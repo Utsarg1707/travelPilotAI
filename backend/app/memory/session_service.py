@@ -33,7 +33,11 @@ class SessionService:
             session_created = True
 
         try:
-            record = db.query(TravelSessionModel).filter(TravelSessionModel.session_id == session_id).first()
+            record = (
+                db.query(TravelSessionModel)
+                .filter(TravelSessionModel.session_id == session_id)
+                .first()
+            )
             if not record:
                 record = TravelSessionModel(
                     session_id=session_id,
@@ -75,7 +79,11 @@ class SessionService:
             session_created = True
 
         try:
-            return db.query(TravelSessionModel).filter(TravelSessionModel.session_id == session_id).first()
+            return (
+                db.query(TravelSessionModel)
+                .filter(TravelSessionModel.session_id == session_id)
+                .first()
+            )
         finally:
             if session_created:
                 db.close()

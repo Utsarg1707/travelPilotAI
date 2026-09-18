@@ -55,7 +55,9 @@ def test_edit_plan_endpoint():
     r_create = client.post("/api/v1/travel/plan", json=payload)
     sess_id = r_create.json()["session_id"]
 
-    r_edit = client.post(f"/api/v1/travel/{sess_id}/edit", json={"feedback": "Choose a beachfront resort."})
+    r_edit = client.post(
+        f"/api/v1/travel/{sess_id}/edit", json={"feedback": "Choose a beachfront resort."}
+    )
     assert r_edit.status_code == 200
     assert r_edit.json()["approval_status"] == "edited"
 

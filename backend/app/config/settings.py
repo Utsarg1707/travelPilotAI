@@ -1,6 +1,5 @@
 """Centralized Application Configuration for TravelPilot AI."""
 
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,6 +39,7 @@ class Settings(BaseSettings):
             val = self.CORS_ORIGINS.strip()
             if val.startswith("[") and val.endswith("]"):
                 import json
+
                 try:
                     res = json.loads(val)
                     if isinstance(res, list):

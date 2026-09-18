@@ -17,7 +17,7 @@ def test_hitl_interrupt_and_approve():
     }
 
     # 1. First invocation triggers interrupt at human_review node
-    events = list(graph.stream(initial_state, config))
+    _events = list(graph.stream(initial_state, config))
     state_snap = graph.get_state(config)
     assert len(state_snap.next) > 0
     assert "human_review" in state_snap.next[0]
@@ -44,7 +44,9 @@ def test_hitl_interrupt_and_edit():
     list(graph.stream(initial_state, config))
 
     # 2. Resume with EDIT action
-    resume_cmd = Command(resume={"action": "edit", "feedback": "Please choose a cheaper resort near downtown."})
+    resume_cmd = Command(
+        resume={"action": "edit", "feedback": "Please choose a cheaper resort near downtown."}
+    )
     res_final = graph.invoke(resume_cmd, config)
 
     assert res_final.get("approval_status") == "edited"

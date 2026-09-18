@@ -1,6 +1,5 @@
 """Weather Specialist Agent using Free Weather Provider."""
 
-
 from backend.app.providers.weather_provider import FreeWeatherProvider
 from backend.app.schemas.travel_state import TravelState
 from backend.app.schemas.weather import WeatherResult
@@ -19,7 +18,9 @@ class WeatherAgent:
     def run_node(cls, state: TravelState) -> TravelState:
         """Execute Weather Agent as a LangGraph node handler."""
         decision = state.get("supervisor_decision")
-        destinations = state.get("destinations") or (decision.destinations if decision and decision.destinations else [])
+        destinations = state.get("destinations") or (
+            decision.destinations if decision and decision.destinations else []
+        )
         destination = state.get("destination") or (decision.destination if decision else "Dubai")
         duration = decision.duration_days if decision else 5
 
