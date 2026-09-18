@@ -67,6 +67,105 @@ class SupervisorAgent:
         return cls._fallback_deterministic_router(user_query)
 
     @classmethod
+    def _extract_destinations_from_query(cls, query: str, origin: str) -> list[str]:
+        """Dynamically parse destination cities/regions from user natural language query."""
+        query_lower = query.lower()
+
+        # 1. Regex pattern for "to <destinations> from", "to <destinations> for", "trip to <destinations>"
+        pattern = r"(?:to|visit|in|explore)\s+([a-zA-Z\s,-]+?)(?:\s+from|\s+for|\s+with|\s+under|\s+below|\s+of|\s+\d|\s*[\.!?]|$)"
+        match = re.search(pattern, query, re.IGNORECASE)
+
+        raw_dest_str = ""
+        if match:
+            raw_dest_str = match.group(1).strip()
+            if " from " in raw_dest_str.lower():
+                raw_dest_str = raw_dest_str.lower().split(" from ")[0].strip()
+
+        if raw_dest_str:
+            parts = re.split(r",|\s+and\s+|\s*&\s*", raw_dest_str, flags=re.IGNORECASE)
+            stop_words = {
+                "a",
+                "an",
+                "the",
+                "trip",
+                "days",
+                "day",
+                "people",
+                "person",
+                "budget",
+                "pax",
+                "travelers",
+                "traveler",
+                "snow",
+                "with",
+                "for",
+                "from",
+                "today",
+                "tomorrow",
+                "tonight",
+                "week",
+                "next",
+                "month",
+                "year",
+                "weather",
+                "flights",
+                "flight",
+                "hotels",
+                "hotel",
+                "itinerary",
+                "plan",
+                origin.lower(),
+            }
+            dests: list[str] = []
+            for p in parts:
+                cleaned = p.strip()
+                words = [w for w in cleaned.split() if w.lower() not in stop_words]
+                if words:
+                    city_name = " ".join(w.capitalize() for w in words)
+                    if city_name and city_name.lower() != origin.lower() and city_name not in dests:
+                        dests.append(city_name)
+            if dests:
+                return dests
+
+        # 2. Known places list (expanded)
+        known_cities = [
+            "shimla",
+            "kashmir",
+            "manali",
+            "ladakh",
+            "goa",
+            "kerala",
+            "jaipur",
+            "udaipur",
+            "mumbai",
+            "delhi",
+            "bangalore",
+            "dubai",
+            "abu dhabi",
+            "paris",
+            "rome",
+            "venice",
+            "tokyo",
+            "singapore",
+            "london",
+            "bali",
+            "switzerland",
+            "new york",
+            "barcelona",
+        ]
+        found_destinations: list[str] = []
+        for city in known_cities:
+            if city in query_lower and city != origin.lower():
+                formatted_city = " ".join(w.capitalize() for w in city.split())
+                if formatted_city not in found_destinations:
+                    found_destinations.append(formatted_city)
+
+        if found_destinations:
+            return found_destinations
+
+        return ["Dubai"]
+
+    @classmethod
     def _fallback_deterministic_router(cls, query: str) -> SupervisorDecision:
         """Deterministic rule-based router for demo mode without LLM calls."""
         query_lower = query.lower()
@@ -77,34 +176,8 @@ class SupervisorAgent:
         if origin_match:
             origin = origin_match.group(1).capitalize()
 
-        # Multi-destination extraction heuristic
-        known_cities = [
-            "dubai",
-            "abu dhabi",
-            "paris",
-            "tokyo",
-            "singapore",
-            "goa",
-            "london",
-            "rome",
-            "bali",
-            "bangalore",
-            "delhi",
-            "mumbai",
-            "venice",
-            "barcelona",
-        ]
-        found_destinations: list[str] = []
-        for city in known_cities:
-            if city in query_lower and city != origin.lower():
-                formatted_city = " ".join(w.capitalize() for w in city.split())
-                if formatted_city not in found_destinations:
-                    found_destinations.append(formatted_city)
-
-        if not found_destinations:
-            found_destinations = ["Dubai"]
-
-        destinations = found_destinations
+        # Multi-destination dynamic extraction heuristic
+        destinations = cls._extract_destinations_from_query(query, origin)
         destination = " & ".join(destinations) if len(destinations) > 1 else destinations[0]
 
         # Duration extraction heuristic

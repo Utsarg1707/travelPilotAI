@@ -33,6 +33,10 @@ class FreeWeatherProvider(WeatherProvider):
         "mumbai": (19.0760, 72.8777),
         "venice": (45.4408, 12.3155),
         "barcelona": (41.3851, 2.1734),
+        "shimla": (31.1048, 77.1734),
+        "kashmir": (34.0837, 74.7973),
+        "srinagar": (34.0837, 74.7973),
+        "manali": (32.2432, 77.1892),
     }
 
     def get_weather_forecast(self, destination: str, days: int = 5) -> WeatherResult:

@@ -8,6 +8,157 @@ class ItineraryAgent:
     """Specialist Agent responsible for synthesizing day-by-day activity schedules."""
 
     DESTINATION_THEMES: dict[str, list[dict[str, str]]] = {
+        "shimla": [
+            {
+                "theme": "Arrival, Mall Road Promenade & Heritage Christ Church",
+                "morning": (
+                    "Arrival & Hotel Check-in",
+                    "Arrive in Shimla via scenic Kalka toy train/car, check into hotel.",
+                    "Shimla Mall Road",
+                    0.0,
+                ),
+                "afternoon": (
+                    "The Ridge & Christ Church Heritage Walk",
+                    "Walk along famous open Ridge plaza, visit Neo-Gothic 1857 Christ Church.",
+                    "The Ridge, Shimla",
+                    500.0,
+                ),
+                "evening": (
+                    "Lakkar Bazaar Shopping & Himachali Dinner",
+                    "Browse wooden handicrafts, enjoy steaming Momos and Siddu at local eatery.",
+                    "Lakkar Bazaar",
+                    1200.0,
+                ),
+            },
+            {
+                "theme": "Kufri Snow Point, Adventure Activities & Pine Forest Walk",
+                "morning": (
+                    "Kufri Snow Point Excursion",
+                    "Excursion to Kufri for snow views, horse riding, and Himalayan Nature Park.",
+                    "Kufri Snow Park",
+                    2500.0,
+                ),
+                "afternoon": (
+                    "Tobogganing & Skiing in Kufri",
+                    "Experience thrilling toboggan rides and snow sports amidst pine valley.",
+                    "Kufri Fun World",
+                    2000.0,
+                ),
+                "evening": (
+                    "Café Hopping on Mall Road",
+                    "Warm up with hot chocolate and Pahadi teas at colonial cafes.",
+                    "Mall Road",
+                    1500.0,
+                ),
+            },
+            {
+                "theme": "Jakhoo Temple Cable Car & Viceregal Lodge",
+                "morning": (
+                    "Jakhoo Temple Ropeway & Hanuman Statue",
+                    "Cable car ride to Jakhoo Hill (8054 ft) and visit 108ft Lord Hanuman statue.",
+                    "Jakhoo Hill",
+                    1000.0,
+                ),
+                "afternoon": (
+                    "Viceregal Lodge & Indian Institute of Advanced Study",
+                    "Tour magnificent Jacobethan architecture estate and botanical gardens.",
+                    "Observatory Hill",
+                    800.0,
+                ),
+                "evening": (
+                    "Sunset Point & Departure Transfer",
+                    "Capture panoramic Himalayan valley sunset views before return journey.",
+                    "Scandal Point",
+                    500.0,
+                ),
+            },
+        ],
+        "kashmir": [
+            {
+                "theme": "Srinagar Arrival, Dal Lake Shikara Ride & Houseboat Check-in",
+                "morning": (
+                    "Srinagar Airport Arrival & Transfer",
+                    "Arrive at Sheikh ul-Alam International Airport, transfer to Dal Lake.",
+                    "Srinagar",
+                    0.0,
+                ),
+                "afternoon": (
+                    "Luxury Houseboat Check-in & Kashmiri Wazwan Lunch",
+                    "Check into handcrafted wooden houseboat, savor authentic Kashmiri Wazwan meal.",
+                    "Dal Lake Houseboat",
+                    2500.0,
+                ),
+                "evening": (
+                    "Sunset Shikara Ride & Floating Market",
+                    "Glide past lotus gardens and floating flower markets in wooden Shikara boat.",
+                    "Dal Lake",
+                    1500.0,
+                ),
+            },
+            {
+                "theme": "Gulmarg Snow Gondola Cable Car & Skiing Adventure",
+                "morning": (
+                    "Drive to Gulmarg & Phase 1 Gondola Ride",
+                    "Scenic drive to Gulmarg ('Meadow of Flowers') and take Phase 1 Gondola cable car to Kongdoori.",
+                    "Gulmarg Gondola Station",
+                    3500.0,
+                ),
+                "afternoon": (
+                    "Phase 2 Apharwat Peak Snow Point & Skiing",
+                    "Ascend to 13,780 ft snow slopes of Apharwat Peak for snow play and skiing.",
+                    "Apharwat Peak",
+                    3000.0,
+                ),
+                "evening": (
+                    "Warm Kahwa Tea at Pine Resort",
+                    "Sip hot Kashmiri Kahwa tea infused with saffron, cardamom and almonds.",
+                    "Gulmarg Resort",
+                    800.0,
+                ),
+            },
+            {
+                "theme": "Pahalgam Valley of Shepherds & Betaab Valley",
+                "morning": (
+                    "Drive to Pahalgam via Saffron Fields & Awantipora",
+                    "Visit Pampore saffron fields and ancient Awantipora temple ruins.",
+                    "Pahalgam Highway",
+                    1200.0,
+                ),
+                "afternoon": (
+                    "Betaab Valley & Aru Valley Excursion",
+                    "Explore pristine pine forest valleys, snow-fed stream streams, and pony rides.",
+                    "Betaab Valley",
+                    2000.0,
+                ),
+                "evening": (
+                    "Lidder River Riverside Dining",
+                    "Enjoy grilled trout fish dinner along gushing Lidder river banks.",
+                    "Lidder Riverfront",
+                    2200.0,
+                ),
+            },
+            {
+                "theme": "Mughal Gardens & Pashmina Handicraft Shopping",
+                "morning": (
+                    "Shalimar Bagh & Nishat Bagh Mughal Gardens",
+                    "Walk through terraced lawns, cascading fountains, and historic Chinar trees.",
+                    "Boulevard Road",
+                    1000.0,
+                ),
+                "afternoon": (
+                    "Pashmina Shawl & Saffron Shopping",
+                    "Shop for authentic hand-woven Kashmiri Pashmina shawls, dry fruits, and saffron.",
+                    "Lal Chowk Srinagar",
+                    3000.0,
+                ),
+                "evening": (
+                    "Departure Transfer",
+                    "Transfer to Srinagar Airport for onward flight home with magical snow memories.",
+                    "Srinagar Airport",
+                    0.0,
+                ),
+            },
+        ],
         "goa": [
             {
                 "theme": "Arrival, Hotel Check-in & Calangute Beach Sunset",
