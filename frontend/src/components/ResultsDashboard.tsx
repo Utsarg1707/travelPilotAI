@@ -1,22 +1,60 @@
-import React, { useState } from 'react';
-import { Plane, Hotel, CloudSun, DollarSign, Calendar, Info, FileText, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plane, Hotel, CloudSun, DollarSign, Calendar, Info, FileText } from 'lucide-react';
 import { PlanResponse } from '../types/travel';
+
+type TabType = 'itinerary' | 'flights' | 'hotels' | 'weather' | 'budget' | 'markdown';
 
 interface ResultsDashboardProps {
   planResponse: PlanResponse;
 }
 
 export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ planResponse }) => {
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'flights' | 'hotels' | 'weather' | 'budget' | 'markdown'>('itinerary');
-
-  if (!planResponse.final_response) return null;
-
   const decision = planResponse.supervisor_decision;
   const itinerary = planResponse.itinerary;
   const flights = planResponse.flight_results;
   const hotels = planResponse.hotel_results;
   const weather = planResponse.weather_forecast;
   const budget = planResponse.budget_analysis;
+  const selectedAgents = planResponse.selected_agents || [];
+
+  const hasItinerary = selectedAgents.length > 0 
+    ? selectedAgents.includes('itinerary') 
+    : !!itinerary?.days?.length;
+
+  const hasFlights = selectedAgents.length > 0
+    ? selectedAgents.includes('flight')
+    : !!flights?.options?.length;
+
+  const hasHotels = selectedAgents.length > 0
+    ? selectedAgents.includes('hotel')
+    : !!hotels?.options?.length;
+
+  const hasWeather = selectedAgents.length > 0
+    ? selectedAgents.includes('weather')
+    : !!weather;
+
+  const hasBudget = selectedAgents.length > 0
+    ? selectedAgents.includes('budget')
+    : !!budget;
+
+  const availableTabs: TabType[] = [
+    hasItinerary ? ('itinerary' as const) : null,
+    hasFlights ? ('flights' as const) : null,
+    hasHotels ? ('hotels' as const) : null,
+    hasWeather ? ('weather' as const) : null,
+    hasBudget ? ('budget' as const) : null,
+    'markdown' as const,
+  ].filter(Boolean) as TabType[];
+
+  const [activeTab, setActiveTab] = useState<TabType>(availableTabs[0] || 'markdown');
+
+  useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.includes(activeTab)) {
+      setActiveTab(availableTabs[0]);
+    }
+  }, [planResponse, availableTabs.join(',')]);
+
+  if (!planResponse.final_response) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -45,41 +83,51 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ planResponse
 
         {/* Dashboard Navigation Tabs */}
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', overflowX: 'auto' }}>
-          <button
-            onClick={() => setActiveTab('itinerary')}
-            className={`btn ${activeTab === 'itinerary' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          >
-            <Calendar size={15} /> Day-by-Day Itinerary
-          </button>
-          <button
-            onClick={() => setActiveTab('flights')}
-            className={`btn ${activeTab === 'flights' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          >
-            <Plane size={15} /> Flight Options ({flights?.options?.length || 0})
-          </button>
-          <button
-            onClick={() => setActiveTab('hotels')}
-            className={`btn ${activeTab === 'hotels' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          >
-            <Hotel size={15} /> Lodging Options ({hotels?.options?.length || 0})
-          </button>
-          <button
-            onClick={() => setActiveTab('weather')}
-            className={`btn ${activeTab === 'weather' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          >
-            <CloudSun size={15} /> Live Weather
-          </button>
-          <button
-            onClick={() => setActiveTab('budget')}
-            className={`btn ${activeTab === 'budget' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          >
-            <DollarSign size={15} /> Budget Analysis
-          </button>
+          {hasItinerary && (
+            <button
+              onClick={() => setActiveTab('itinerary')}
+              className={`btn ${activeTab === 'itinerary' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Calendar size={15} /> Day-by-Day Itinerary
+            </button>
+          )}
+          {hasFlights && (
+            <button
+              onClick={() => setActiveTab('flights')}
+              className={`btn ${activeTab === 'flights' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Plane size={15} /> Flight Options ({flights?.options?.length || 0})
+            </button>
+          )}
+          {hasHotels && (
+            <button
+              onClick={() => setActiveTab('hotels')}
+              className={`btn ${activeTab === 'hotels' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Hotel size={15} /> Lodging Options ({hotels?.options?.length || 0})
+            </button>
+          )}
+          {hasWeather && (
+            <button
+              onClick={() => setActiveTab('weather')}
+              className={`btn ${activeTab === 'weather' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <CloudSun size={15} /> Live Weather
+            </button>
+          )}
+          {hasBudget && (
+            <button
+              onClick={() => setActiveTab('budget')}
+              className={`btn ${activeTab === 'budget' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <DollarSign size={15} /> Budget Analysis
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('markdown')}
             className={`btn ${activeTab === 'markdown' ? 'btn-primary' : 'btn-secondary'}`}

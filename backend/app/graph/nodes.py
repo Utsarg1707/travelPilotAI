@@ -82,9 +82,86 @@ def itinerary_agent_node(state: TravelState) -> dict[str, Any]:
     return res
 
 
+def synthesize_partial_response(state: TravelState) -> str:
+    """Synthesize specific markdown response when ItineraryAgent is skipped."""
+    selected = state.get("selected_agents") or []
+    origin = state.get("origin") or "Bangalore"
+    destination = state.get("destination") or "Destination"
+    travelers = state.get("travelers") or 1
+
+    lines: list[str] = []
+
+    if "flight" in selected and state.get("flight_results"):
+        f_res = state.get("flight_results")
+        lines.append(f"# ✈️ Flight Search Results: {origin} to {destination}")
+        lines.append(f"**Origin**: {origin} | **Destination**: {destination} | **Travelers**: {travelers}\n")
+        if f_res and f_res.options:
+            lines.append("| Airline | Flight No | Departure | Arrival | Duration | Price / Person | Total Flight Cost |")
+            lines.append("|---|---|---|---|---|---|---|")
+            for f in f_res.options:
+                lines.append(
+                    f"| **{f.airline}** | `{f.flight_number}` | {f.departure_time} | {f.arrival_time} | {f.duration} | ₹{f.price_inr:,.2f} | **₹{f.total_price_inr:,.2f}** |"
+                )
+        lines.append("\n*Demo Mode: Flight results are simulated and are not live booking availability.*")
+        return "\n".join(lines)
+
+    if "hotel" in selected and state.get("hotel_results"):
+        h_res = state.get("hotel_results")
+        lines.append(f"# 🏨 Accommodation Options in {destination}")
+        lines.append(f"**Destination**: {destination} | **Nights**: {h_res.nights if h_res else 1}\n")
+        if h_res and h_res.options:
+            lines.append("| Hotel Name | Location | Rating | Price / Night | Total Stay | Key Amenities |")
+            lines.append("|---|---|---|---|---|---|")
+            for h in h_res.options:
+                amenities_str = ", ".join(h.amenities[:3]) if h.amenities else "WiFi, AC, Breakfast"
+                lines.append(
+                    f"| **{h.hotel_name}** | {h.location} | ⭐ {h.rating}/5 | ₹{h.price_per_night_inr:,.2f} | **₹{h.total_price_inr:,.2f}** | {amenities_str} |"
+                )
+        lines.append("\n*Demo Mode: Hotel results are simulated and are not live booking availability.*")
+        return "\n".join(lines)
+
+    if "weather" in selected and state.get("weather_results"):
+        w_res = state.get("weather_results")
+        lines.append(f"# 🌤️ Weather Forecast for {destination}")
+        if w_res:
+            lines.append(f"**Status**: {w_res.weather_summary}\n")
+            if w_res.forecast:
+                lines.append("| Day / Date | Max Temp | Min Temp | Condition | Rain Probability |")
+                lines.append("|---|---|---|---|---|")
+                for w in w_res.forecast:
+                    lines.append(
+                        f"| {w.date} | {w.temp_max_c:.1f}°C | {w.temp_min_c:.1f}°C | {w.weather_condition} | {w.precipitation_prob}% |"
+                    )
+            if w_res.recommendations:
+                lines.append("\n**Recommendations**:")
+                for rec in w_res.recommendations:
+                    lines.append(f"- {rec}")
+        return "\n".join(lines)
+
+    if "budget" in selected and state.get("budget_analysis"):
+        b_res = state.get("budget_analysis")
+        lines.append(f"# 💰 Budget Analysis for {destination}")
+        if b_res:
+            lines.append(f"**Limit**: ₹{b_res.budget_limit:,.2f} | **Estimated Total**: ₹{b_res.estimated_total:,.2f} | **Status**: `{b_res.status_label}`\n")
+            cb = b_res.cost_breakdown
+            limit = b_res.budget_limit or 1.0
+            lines.append("| Expense Category | Estimated Cost (INR) | % of Budget |")
+            lines.append("|---|---|---|")
+            lines.append(f"| ✈️ Flights | ₹{cb.flights:,.2f} | {(cb.flights / limit)*100:.1f}% |")
+            lines.append(f"| 🏨 Accommodation | ₹{cb.accommodation:,.2f} | {(cb.accommodation / limit)*100:.1f}% |")
+            lines.append(f"| 🍽️ Food & Dining | ₹{cb.food:,.2f} | {(cb.food / limit)*100:.1f}% |")
+            lines.append(f"| 🚕 Local Transport | ₹{cb.transport:,.2f} | {(cb.transport / limit)*100:.1f}% |")
+            lines.append(f"| 🎟️ Tours & Activities | ₹{cb.activities:,.2f} | {(cb.activities / limit)*100:.1f}% |")
+            lines.append(f"| 🛍️ Miscellaneous Buffer | ₹{cb.miscellaneous:,.2f} | {(cb.miscellaneous / limit)*100:.1f}% |")
+            lines.append(f"| **TOTAL ESTIMATED** | **₹{b_res.estimated_total:,.2f}** | **{(b_res.estimated_total / limit)*100:.1f}%** |")
+        return "\n".join(lines)
+
+    return "Travel query processed successfully."
+
+
 def output_guardrail_node(state: TravelState) -> dict[str, Any]:
     """Node handler for validating synthesized output."""
-    current_response = state.get("final_response") or "Travel plan processed successfully."
+    current_response = state.get("final_response") or synthesize_partial_response(state)
     result = OutputGuardrail.evaluate(
         final_response=current_response,
         budget_analysis=state.get("budget_analysis"),
