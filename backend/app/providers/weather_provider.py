@@ -39,9 +39,23 @@ class FreeWeatherProvider(WeatherProvider):
         "manali": (32.2432, 77.1892),
     }
 
-    def get_weather_forecast(self, destination: str, days: int = 5) -> WeatherResult:
+    def _get_coordinates(self, destination: str) -> tuple[float, float] | None:
         dest_key = destination.lower().strip()
-        coords = self.CITY_COORDINATES.get(dest_key)
+        if dest_key in self.CITY_COORDINATES:
+            return self.CITY_COORDINATES[dest_key]
+        try:
+            url = f"https://geocoding-api.open-meteo.com/v1/search?name={destination}&count=1&language=en&format=json"
+            resp = httpx.get(url, timeout=3.0)
+            if resp.status_code == 200:
+                results = resp.json().get("results", [])
+                if results:
+                    return float(results[0]["latitude"]), float(results[0]["longitude"])
+        except Exception:
+            pass
+        return None
+
+    def get_weather_forecast(self, destination: str, days: int = 5) -> WeatherResult:
+        coords = self._get_coordinates(destination)
 
         if coords:
             try:

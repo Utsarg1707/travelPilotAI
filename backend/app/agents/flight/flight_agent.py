@@ -1,7 +1,8 @@
 """Flight Specialist Agent."""
 
 from backend.app.mcp import MCPClient
-from backend.app.schemas.flights import FlightOption, FlightSearchResult
+from backend.app.providers.flight_provider import DemoFlightProvider
+from backend.app.schemas.flights import FlightSearchResult
 from backend.app.schemas.travel_state import TravelState
 
 
@@ -16,63 +17,9 @@ class FlightAgent:
         travelers: int = 1,
         preferences: list[str] | None = None,
     ) -> FlightSearchResult:
-        """Search and compare flight options (Demo Mode provider integration)."""
-        # Generate realistic simulated options tailored to destination
-        options: list[FlightOption] = [
-            FlightOption(
-                airline="Emirates",
-                flight_number="EK-565",
-                departure_time="10:30 AM",
-                arrival_time="01:00 PM",
-                origin=origin,
-                destination=destination,
-                price_inr=18500.0,
-                total_price_inr=18500.0 * travelers,
-                duration="4h 00m",
-                stops=0,
-                is_demo=True,
-            ),
-            FlightOption(
-                airline="IndiGo",
-                flight_number="6E-1401",
-                departure_time="06:15 AM",
-                arrival_time="08:45 AM",
-                origin=origin,
-                destination=destination,
-                price_inr=14200.0,
-                total_price_inr=14200.0 * travelers,
-                duration="4h 00m",
-                stops=0,
-                is_demo=True,
-            ),
-            FlightOption(
-                airline="Air India",
-                flight_number="AI-995",
-                departure_time="04:30 PM",
-                arrival_time="07:10 PM",
-                origin=origin,
-                destination=destination,
-                price_inr=16100.0,
-                total_price_inr=16100.0 * travelers,
-                duration="4h 10m",
-                stops=0,
-                is_demo=True,
-            ),
-        ]
-
-        # Sort options by price to find cheapest
-        cheapest = min(options, key=lambda x: x.price_inr)
-
-        return FlightSearchResult(
-            origin=origin,
-            destination=destination,
-            travelers=travelers,
-            total_options=len(options),
-            options=options,
-            cheapest_option=cheapest,
-            is_demo=True,
-            note="Demo Mode: Flight results are simulated and are not live booking availability.",
-        )
+        """Search and compare flight options."""
+        provider = DemoFlightProvider()
+        return provider.search_flights(origin=origin, destination=destination, travelers=travelers)
 
     @classmethod
     def run_node(cls, state: TravelState) -> TravelState:

@@ -1,7 +1,12 @@
-"""Itinerary Specialist Agent for TravelPilot AI."""
+from typing import Any
 
+from langchain_core.prompts import ChatPromptTemplate
+
+from backend.app.config.llm_factory import LLMFactory
+from backend.app.observability.logger import logger
 from backend.app.schemas.itinerary import Itinerary, ItineraryActivity, ItineraryDay
 from backend.app.schemas.travel_state import TravelState
+from mcp_servers.travel_server.server import search_attractions
 
 
 class ItineraryAgent:
@@ -376,34 +381,65 @@ class ItineraryAgent:
     }
 
     @classmethod
-    def get_template(cls, destination: str, day_idx: int) -> dict[str, str]:
+    def get_template(cls, destination: str, day_idx: int) -> dict[str, Any]:
         dest_key = destination.lower().strip()
         templates = cls.DESTINATION_THEMES.get(dest_key)
         if templates:
             return templates[(day_idx - 1) % len(templates)]
 
-        # Generic fallback template for any destination
-        return {
-            "theme": f"Day {day_idx} Exploration of {destination}",
-            "morning": (
-                "Morning City Highlights Tour",
-                f"Guided morning tour visiting top landmarks in {destination}.",
-                f"Central {destination}",
-                1800.0,
-            ),
-            "afternoon": (
-                "Cultural Experience & Lunch",
-                f"Local cuisine tasting and museum visit in {destination}.",
-                f"Old Town {destination}",
-                2200.0,
-            ),
-            "evening": (
-                "Scenic Viewpoint Sunset & Dinner",
-                "Sunset views and gourmet dinner at top rated restaurant.",
-                f"{destination} Promenade",
-                2500.0,
-            ),
-        }
+        # Try dynamic MCP Attraction lookup
+        try:
+            attraction_data = search_attractions(destination)
+            if attraction_data and len(attraction_data) >= 3:
+                a1 = attraction_data[(day_idx * 3 - 3) % len(attraction_data)]
+                a2 = attraction_data[(day_idx * 3 - 2) % len(attraction_data)]
+                a3 = attraction_data[(day_idx * 3 - 1) % len(attraction_data)]
+                return {
+                    "theme": f"Day {day_idx} Exploration of {destination} ({a1['name']} & Cultural Highlights)",
+                    "morning": (
+                        a1["name"],
+                        a1["description"],
+                        f"District 1, {destination}",
+                        float(a1.get("estimated_cost_inr", 1500.0)),
+                    ),
+                    "afternoon": (
+                        a2["name"],
+                        a2["description"],
+                        f"Cultural Center, {destination}",
+                        float(a2.get("estimated_cost_inr", 1800.0)),
+                    ),
+                    "evening": (
+                        a3["name"],
+                        a3["description"],
+                        f"Promenade, {destination}",
+                        float(a3.get("estimated_cost_inr", 2200.0)),
+                    ),
+                }
+        except Exception:
+            pass
+
+        # Distinct daily themes if offline
+        day_themes = [
+            {
+                "theme": f"Day {day_idx} City Arrival & Landmark Heritage Walk",
+                "morning": ("City Orientation & Hotel Check-in", f"Arrive in {destination}, transfer to hotel and settle in.", f"Central {destination}", 0.0),
+                "afternoon": ("Historic District & Main Plaza Tour", f"Guided walking tour of {destination} landmark square and historic architecture.", f"Old Town {destination}", 1500.0),
+                "evening": ("Welcome Dinner & Local Culinary Tasting", f"Savor authentic regional cuisine at a top-rated traditional bistro.", f"{destination} Market Square", 2500.0),
+            },
+            {
+                "theme": f"Day {day_idx} Arts, Museums & Cultural Exploration",
+                "morning": ("National Museum & Art Gallery Visit", f"Explore key art collections and historical exhibits of {destination}.", f"Cultural District {destination}", 1200.0),
+                "afternoon": ("Local Artisan Bazaar & Souk Shopping", f"Browse local handicrafts, spices, and artisan souvenirs in {destination}.", f"Bazaar District {destination}", 1800.0),
+                "evening": ("Panoramic Sunset Viewpoint & Fine Dining", f"Watch sunset views over {destination} skyline followed by dinner.", f"{destination} Promenade", 2800.0),
+            },
+            {
+                "theme": f"Day {day_idx} Nature, Parks & Riverfront Promenade",
+                "morning": ("Botanical Gardens & Waterfront Walk", f"Morning stroll through scenic public gardens and riverfront paths in {destination}.", f"Waterfront {destination}", 500.0),
+                "afternoon": ("Iconic Monument & Architectural Highlights", f"Visit famous architectural wonders and photogenic spots.", f"Central Boulevard {destination}", 2000.0),
+                "evening": ("Night Market & Acoustic Live Music", f"Vibrant evening exploring street food stalls and live local acoustic music.", f"Night Market {destination}", 2200.0),
+            },
+        ]
+        return day_themes[(day_idx - 1) % len(day_themes)]
 
     @classmethod
     def generate(
@@ -415,6 +451,40 @@ class ItineraryAgent:
     ) -> Itinerary:
         """Generate detailed day-by-day itinerary supporting single or multi-destination trips."""
         target_dests = destinations if destinations and len(destinations) > 0 else [destination]
+
+        # Try Groq LLM structured generation when API key is configured
+        if LLMFactory.is_groq_available():
+            try:
+                llm = LLMFactory.get_chat_model(temperature=0.3)
+                structured_llm = llm.with_structured_output(Itinerary)
+                prompt = ChatPromptTemplate.from_messages(
+                    [
+                        (
+                            "system",
+                            "You are an expert travel itinerary specialist. Generate a comprehensive, realistic day-by-day travel itinerary for the target destination(s). Make sure EVERY day has a unique, non-repeating theme, location, and 3 activities (Morning, Afternoon, Evening) with realistic costs in INR.",
+                        ),
+                        (
+                            "human",
+                            "Create a {duration_days}-day travel itinerary for {dest_str}. Preferences: {pref_str}",
+                        ),
+                    ]
+                )
+                chain = prompt | structured_llm
+                dest_str = " & ".join(target_dests)
+                pref_str = ", ".join(preferences) if preferences else "general sightseeing and culture"
+                res: Itinerary = chain.invoke(
+                    {
+                        "duration_days": duration_days,
+                        "dest_str": dest_str,
+                        "pref_str": pref_str,
+                    }
+                )
+                if res and res.days and len(res.days) > 0:
+                    return res
+            except Exception as e:
+                logger.warning("Groq LLM itinerary generation failed, falling back to dynamic provider", error=str(e))
+
+        # Dynamic fallback generation
         days: list[ItineraryDay] = []
         num_dests = len(target_dests)
 
