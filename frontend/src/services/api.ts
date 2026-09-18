@@ -1,6 +1,7 @@
 import { PlanResponse, SessionDetail } from '../types/travel';
 
-const API_BASE = '/api/v1/travel';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '') : '';
+const API_BASE = `${BASE_URL}/api/v1/travel`;
 
 export async function submitTravelPlan(userQuery: string, sessionId?: string): Promise<PlanResponse> {
   const response = await fetch(`${API_BASE}/plan`, {

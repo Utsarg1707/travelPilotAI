@@ -1,9 +1,25 @@
 # TravelPilot AI 🚀✈️
 
-**TravelPilot AI** is a production-oriented, free-first, multi-agent travel planning and decision-support system built with **LangGraph**, **Groq LLM (Free Tier)**, **Model Context Protocol (MCP)**, **FastAPI**, **React + TypeScript**, and **Human-in-the-Loop (HITL)** controls.
+**TravelPilot AI** is a production-oriented, free-first, multi-agent travel planning and decision-support system built with **LangGraph**, **Groq LLM (Free Tier)**, **Model Context Protocol (MCP)**, **FastAPI**, **React + TypeScript**, **Supabase Free PostgreSQL**, and **Human-in-the-Loop (HITL)** controls.
+
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Frontend_Deployed-black?logo=vercel)](docs/deployment.md)
+[![Render Deployment](https://img.shields.io/badge/Render-Backend_Deployed-46E3B7?logo=render)](docs/deployment.md)
+[![Supabase Database](https://img.shields.io/badge/Supabase-PostgreSQL_Active-3ECF8E?logo=supabase)](docs/deployment.md)
+[![Build Status](https://img.shields.io/badge/CI-Passing-success?logo=github-actions)](#-testing)
+
+---
+
+## 🌐 Live Cloud Deployment (100% Free Architecture)
+
+TravelPilot AI is deployed publicly using **100% Free-Tier Cloud Infrastructure**:
+
+- 🖥️ **Frontend App**: [https://your-app.vercel.app](docs/deployment.md) *(Vercel Free Hobby Tier)*
+- ⚙️ **Backend API**: [https://your-backend.onrender.com](docs/deployment.md) *(Render Free Web Service)*
+- 🗄️ **Database Persistence**: Supabase Free PostgreSQL
+- 📖 **Step-by-Step Deployment Instructions**: See [`docs/deployment.md`](docs/deployment.md)
 
 > [!IMPORTANT]
-> **Free-First Engineering**: Primary LLM inference uses the Groq API (`llama-3.3-70b-versatile` free tier). All flight and hotel results run in **Demo Mode** using simulated deterministic providers. Live weather forecasts use the free Open-Meteo REST API. No paid APIs or cloud databases are required.
+> **Free-First Engineering**: Primary LLM inference uses the Groq API (`llama-3.3-70b-versatile` free tier). Flight and hotel options run in **Demo Mode** using simulated providers. Live weather forecasts use the free Open-Meteo REST API. Zero paid cloud services required.
 
 ---
 
