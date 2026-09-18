@@ -5,6 +5,7 @@ import re
 from langchain_core.prompts import ChatPromptTemplate
 
 from backend.app.config.llm_factory import LLMFactory
+from backend.app.observability.logger import logger
 from backend.app.schemas.supervisor import SupervisorDecision
 from backend.app.schemas.travel_state import TravelState
 
@@ -59,9 +60,11 @@ class SupervisorAgent:
                     elif len(decision.destinations) > 1 and " & " not in decision.destination:
                         decision.destination = " & ".join(decision.destinations)
                     return decision
-            except Exception:
-                # Log error and fallback gracefully to deterministic router
-                pass
+            except Exception as e:
+                logger.warning(
+                    "Groq LLM structured extraction encountered an issue, falling back to dynamic parser",
+                    error=str(e),
+                )
 
         # Deterministic Fallback Router for Demo / Offline Mode
         return cls._fallback_deterministic_router(user_query)
